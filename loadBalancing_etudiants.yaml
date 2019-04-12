@@ -27,10 +27,6 @@ parameters:
     default: 9ec556ab-d458-470e-96bc-1bab0ef66fb9
     #A completer
 
-  pool_network_address:
-      type: string
-      description: Pool network address
-
     # Vous pouvez ajouter d'autres paramètres
     # Il faut bien définir les descriptions, les valeurs par default et les contraintes
 
@@ -49,32 +45,78 @@ resources:
                 flavor: { get_param: flavor } 
                 networks: 
                 - network: { get_param: net_id}
+                user_data_format: RAW
+                user_data: |
+                  #!/bin/bash
+                  sudo -i
+                  echo "update system because because python2.7 doesnt seem to be installed"
+                  apt update
+                  apt-get upgrade
+                  echo "install python"
+                  apt-get --assume-yes --fix-missing install python2.7
+                  echo "check python2.7 version" 
+                  python2.7 --version
+                  echo "getting server.py"
+                  wget https://raw.githubusercontent.com/houssemmh/INF8480-TP3/master/server.py
+                  echo "starting server.py"
+                  python2.7 server.py&
+                  echo "server script started"
+                  # ...
       #A completer
+  myfloatingip:
+      type: OS::Neutron::FloatingIP
+      properties:
+          floating_network: 1fa7fade-2722-4677-9e2b-da22d385202b
+          port_id: { get_attr: [myloadbalancer, vip_port_id ]}
 
-  mypoolmember:
+
+  poolmember1:
       type: OS::Neutron::LBaaS::PoolMember
       properties:
-          address: { get_param: pool_network_address }
-          pool: { get_resource: mypool}
+          address: { get_attr: [server_nodes, resource.0, first_address]}
+          pool: { get_resource: mypool }
+          protocol_port: 8080
+          subnet: { get_param: subnet_id }
+
+
+  poolmember2:
+      type: OS::Neutron::LBaaS::PoolMember
+      properties:
+          address: { get_attr: [server_nodes, resource.1, first_address]}
+          pool: { get_resource: mypool }
+          protocol_port: 8080
+          subnet: { get_param: subnet_id }
+
+
+  poolmember3:
+      type: OS::Neutron::LBaaS::PoolMember
+      properties:
+          address: { get_attr: [server_nodes, resource.2, first_address]}
+          pool: { get_resource: mypool }
           protocol_port: 8080
           subnet: { get_param: subnet_id }
 
   mypool:
       type: OS::Neutron::LBaaS::Pool
       properties:
+          listener: { get_resource: mylistener }
           lb_algorithm: ROUND_ROBIN #The algorithm used to distribute load between the members of the pool.
-          protocol: TCP #Protocol of the pool. Pas defini dans l'enonce
+          protocol: HTTP #Protocol of the pool. Pas defini dans l'enonce
           loadbalancer: { get_resource: myloadbalancer }
-
       #A completer
+
+  mylistener:
+      type: OS::Neutron::LBaaS::Listener
+      properties:
+          protocol: HTTP
+          protocol_port: 8080
+          loadbalancer: { get_resource: myloadbalancer }
 
   myloadbalancer:
       type: OS::Neutron::LBaaS::LoadBalancer
       properties:
           vip_subnet: { get_param: subnet_id } #The name or ID of the subnet on which to allocate the VIP address.
                       #Value must be of type neutron.subnet
-
-
       #A completer
 
   mymonitor:
@@ -84,8 +126,7 @@ resources:
           max_retries: 2 #deux essaies avant que la machine soit considérée inactive
           pool: { get_resource: mypool }
           timeout: 5 #5 secondes vant de time out une requete s'il n'y a pas de reponse
-          type: TCP #Pas specifie dans enonce
-
+          type: HTTP #Pas specifie dans enonce
       #A completer
 
 
