@@ -1,11 +1,12 @@
 heat_template_version: 2015-10-15
 description: Launch a basic instance with Ubuntu Xenial image using the
-             ``2048-10-1-1`` flavor, ``daniel`` key,  and one network.
+             ``2048-10-1-1`` flavor, ``CQ`` key,  and one network.
 
 parameters:
   NetID:
     type: string
-    description: 10ec556ab-d458-470e-96bc-1bab0ef66fb9
+    description: Reseau
+    default: 9ec556ab-d458-470e-96bc-1bab0ef66fb9
     
 
 resources:
