@@ -62,7 +62,7 @@ resources:
                   python2.7 server.py&
                   echo "server script started"
                   # ...
-      #A completer
+
   myfloatingip:
       type: OS::Neutron::FloatingIP
       properties:
@@ -103,7 +103,6 @@ resources:
           lb_algorithm: ROUND_ROBIN #The algorithm used to distribute load between the members of the pool.
           protocol: HTTP #Protocol of the pool. Pas defini dans l'enonce
           loadbalancer: { get_resource: myloadbalancer }
-      #A completer
 
   mylistener:
       type: OS::Neutron::LBaaS::Listener
@@ -117,7 +116,6 @@ resources:
       properties:
           vip_subnet: { get_param: subnet_id } #The name or ID of the subnet on which to allocate the VIP address.
                       #Value must be of type neutron.subnet
-      #A completer
 
   mymonitor:
       type: OS::Neutron::LBaaS::HealthMonitor
@@ -127,7 +125,6 @@ resources:
           pool: { get_resource: mypool }
           timeout: 5 #5 secondes vant de time out une requete s'il n'y a pas de reponse
           type: HTTP #Pas specifie dans enonce
-      #A completer
 
 
 outputs:
